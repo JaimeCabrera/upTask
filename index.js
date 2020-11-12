@@ -1,70 +1,73 @@
-// import express from 'express' express no sopporta esta sintaxis
 const express = require("express");
-const routes = require("./routes/index");
+const routes = require("./routes");
 const path = require("path");
 const bodyParser = require("body-parser");
-// const expressValidator = require("express-validator");
 const flash = require("connect-flash");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const passport = require("./config/passport");
+// require("./handler/email"); //para pruebas del envio de correos
 
-// helpers con algunas funcones
+// helpers con algunas funciones
 const helpers = require("./helpers");
 
-// cread db conection
+// Crear la conexión a la BD
 const db = require("./config/db");
-// importat el modelo con el autehnticate solo se conecta con el sync crea la strutura de la bd
+
+// Importar el modelo
 require("./models/Proyectos");
 require("./models/Tareas");
 require("./models/Usuarios");
 
 db.sync()
-  .then(() => console.log("conectado al servidor"))
+  .then(() => console.log("Conectado al Servidor"))
   .catch((error) => console.log(error));
 
-// crear app de express
+// crear una app de express
 const app = express();
 
-// expresvlidator
-// app.use(expressValidator);
-// static files
+// Donde cargar los archivos estaticos
 app.use(express.static("public"));
-// add pug view engine
+
+// Habilitar Pug
 app.set("view engine", "pug");
 
-// add bodyparser  to read form data
-app.use(bodyParser.urlencoded({ extended: false }));
-// add view folder
-app.set("views", path.join(__dirname, "./views"));
-// add flash messages
+// habilitar bodyParser para leer datos del formulario
 
-app.use(flash());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// Agregamos express validator a toda la aplicación
+
+// Añadir la carpeta de las vistas
+app.set("views", path.join(__dirname, "./views"));
 
 app.use(cookieParser());
-// sesiones nos permiten navegar entre paginas sin autenticar
+
+// sessiones nos permiten navegar entre distintas paginas sin volvernos a autenticar
 app.use(
   session({
-    secret: "secret",
+    secret: "keyboard cat",
     resave: false,
     saveUninitialized: false,
   })
 );
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-// add vardump to app
+// agregar flash messages
+app.use(flash());
+
+// Pasar var dump a la aplicación
 app.use((req, res, next) => {
-  // para que el helper este presente en cualuier lugar de la app
   res.locals.vardump = helpers.vardump;
   res.locals.mensajes = req.flash();
+  // guardando la referencia del usuario logeado
+  res.locals.usuario = { ...req.user } || null;
   next();
 });
 
-// Routes
 app.use("/", routes());
 
-//puerto del servidor
-app.listen(3000, () => {
-  console.log("server express online on port:3000");
-});
+app.listen(3000);

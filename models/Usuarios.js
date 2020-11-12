@@ -36,6 +36,12 @@ const Usuarios = db.define(
         },
       },
     },
+    activo: {
+      type: DataTypes.INTEGER,
+      defaultValiu: 0,
+    },
+    token: DataTypes.STRING,
+    expire: DataTypes.INTEGER,
   },
   {
     hooks: {
